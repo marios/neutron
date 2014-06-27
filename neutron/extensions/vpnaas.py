@@ -136,6 +136,8 @@ RESOURCE_ATTRIBUTE_MAP = {
                            'convert_to': attr.convert_to_boolean,
                            'is_visible': True},
         'status': {'allow_post': False, 'allow_put': False,
+                   'is_visible': True},
+        'service_attachment_point': {'allow_post': False, 'allow_put': False,
                    'is_visible': True}
     },
 
@@ -398,6 +400,23 @@ class VPNPluginBase(service_base.ServicePluginBase):
 
     def get_plugin_description(self):
         return 'VPN service plugin'
+
+    SVC_INSERTION_TYPE_SVC = "INSERTION_IN_SERVICE"
+
+    def get_supported_insertion_type(self):
+        return self.SVC_INSERTION_TYPE_SVC
+
+    @abc.abstractmethod
+    def create_service_interface(self, context, service_interface):
+        pass
+
+    @abc.abstractmethod
+    def delete_service_interface(self, context, service_interface_id):
+        pass
+
+    @abc.abstractmethod
+    def get_service_interfaces(self, context, filters=None, fields=None):
+        pass
 
     @abc.abstractmethod
     def get_vpnservices(self, context, filters=None, fields=None):

@@ -141,6 +141,14 @@ class IPsecSiteConnection(model_base.BASEV2,
                                   cascade='all, delete, delete-orphan')
 
 
+class ServiceInterface(model_base.BASEV2, models_v2.HasId,
+                       models_v2.HasTenant):
+    name = sa.Column(sa.String(255))
+    description = sa.Column(sa.String(255))
+    insert_type = sa.Column(sa.String(36), nullable=False)
+    insertion_point_id = sa.Column(sa.String(255), nullable=False)
+
+
 class VPNService(model_base.BASEV2, models_v2.HasId, models_v2.HasTenant):
     """Represents a v2 VPNService Object."""
     name = sa.Column(sa.String(255))
@@ -156,6 +164,9 @@ class VPNService(model_base.BASEV2, models_v2.HasId, models_v2.HasTenant):
     ipsec_site_connections = orm.relationship(
         IPsecSiteConnection,
         backref='vpnservice',
+        cascade="all, delete-orphan")
+    service_interface = orm.relationship(ServiceInterface,
+        backref ='insertion_point',
         cascade="all, delete-orphan")
 
 
@@ -607,6 +618,47 @@ class VPNPluginDb(vpnaas.VPNPluginBase, base_db.CommonDbMixin):
             raise vpnaas.RouterInUseByVPNService(
                 router_id=router_id,
                 vpnservice_id=vpnservices[0]['id'])
+
+    def get_service_interfaces(self, context, filters=None, fields=None):
+        # FIXME: do we have to filter out the vpn service interfaces here?
+        # i.e. the collection includes ALL ServiceInterface?
+        return self._get_collection(context, ServiceInterface,
+                                    self._make_svc_iface_dict,
+                                    filters=filters, fields=fields)
+
+    def _make_svc_iface_dict(self, svc_iface_db, fields=None):
+        res = {'id': svc_iface_db['id'],
+               'name': svc_iface_db['name'],
+               'description': svc_iface_db['description'],
+               'tenant_id': svc_iface_db['tenant_id'],
+               'insertion_type': svc_iface_db['insertion_type'],
+               'insertion_point_id': svc_iface_db['insertion_point_id']}
+        return self._fields(res, fields)
+
+    def create_service_interface(self, context, service_interface):
+        svc_iface = service_interface['service_interface']
+        if (svc_iface['insertion_type'] !=
+                self.get_supported_insertion_type()):
+            #FIXME EXCEPTION
+            raise Exception
+        router_id = svc_iface['insertion_point_id']
+        tenant_id = self._get_tenant_id_for_create(context, svc_iface)
+        self._check_router(context, router_id)
+        with context.session.begin(subtransactions=True):
+            svc_iface_db = ServiceInterface(
+                            id=uuidutils.generate_uuid(),
+                            tenant_id=tenant_id,
+                            name=svc_iface['name'],
+                            description=svc_iface['description'],
+                            insertion_type=svc_iface['insertion_type'],
+                            insertion_point_id=svc_iface['insertion_point_id'])
+            context.session.add(svc_iface_db)
+        return self._make_svc_service_interface_dict(svc_iface_db)
+
+    def delete_service_interface(self, context, service_interface_id):
+        service_interface_db = self._get_resource(context,
+                                        ServiceInterface, service_interface_id)
+        context.session.delete(service_interface_db)
 
 
 class VPNPluginRpcDbMixin():

@@ -22,6 +22,12 @@ VPN = "VPN"
 METERING = "METERING"
 L3_ROUTER_NAT = "L3_ROUTER_NAT"
 
+# service insertion constants, these will go away once the base is defined:
+# i just need them in here for now otherwise the code won't pass tests
+#SVC_INSERTION_TYPE_EXT = "EXTERNAL_NEUTRON_PORT"
+#SVC_INSERTION_TYPE_INT = "INTERNAL_NEUTRON_PORT"
+SVC_INSERTION_TYPE_SVC = "INSERTION_IN_SERVICE"
+
 
 #maps extension alias to service type
 EXT_TO_SERVICE_MAPPING = {
