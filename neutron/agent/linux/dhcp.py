@@ -388,14 +388,15 @@ class Dnsmasq(DhcpLocalProcess):
                 lease = '%ss' % self.conf.dhcp_lease_duration
 
             # mode is optional and is not set - skip it
-            if mode:
-                cmd.append('--dhcp-range=%s%s,%s,%s,%s' %
-                           (set_tag, self._TAG_PREFIX % i,
-                            cidr.network, mode, lease))
-            else:
-                cmd.append('--dhcp-range=%s%s,%s,%s' %
-                           (set_tag, self._TAG_PREFIX % i,
-                            cidr.network, lease))
+            #if mode:
+            #    cmd.append('--dhcp-range=%s%s,%s,%s,%s' %
+            #               (set_tag, self._TAG_PREFIX % i,
+            #                cidr.network, mode, lease))
+            #else:
+            cmd.append('--dhcp-range=%s%s,%s,%s,%s' %
+                       (set_tag, self._TAG_PREFIX % i,
+                        subnet.allocation_pools[0]['start'],
+                        subnet.allocation_pools[0]['end'], lease))
 
             possible_leases += cidr.size
 
